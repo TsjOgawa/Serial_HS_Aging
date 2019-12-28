@@ -5,6 +5,9 @@ Function
 フォルダ内の/eml拡張子のファイルを探し出して
 リストアップしていく
 '''
+import quopri
+import base64
+import io
 import os
 import sys
 import email
@@ -30,11 +33,12 @@ class MailParser(object):
                     self.to_address = None
                     self.cc_address = None
                     self.from_address = None
+                    self.date=None #20191224 add date
                     self.body = ""            
                     #print('file:{},ext:{}'.format(file,ext))
                     self.attach_file_list = []
                 # emlの解釈
-                    self._parse()
+                    self._parse(self.folder)
                     print(self.get_attr_data())
         """     if ext == '.eml':
                 print('files: {}'.format(files)) """
@@ -50,6 +54,7 @@ class MailParser(object):
         メールデータの取得
         """
         result = """\
+    DATE: {}
     FROM: {}
     TO: {}
     CC: {}
@@ -60,20 +65,22 @@ class MailParser(object):
     ATTACH_FILE_NAME:
     {}
     """.format(
+            self.date,
             self.from_address,
             self.to_address,
             self.cc_address,
             self.body,
-            ",".join([ x["name"] for x in self.attach_file_list])
+            "_AND_".join([ x["name"] for x in self.attach_file_list])
         )
         return result
 
 
-    def _parse(self):
+    def _parse(self,Flie0):
         """
         メールファイルの解析
         __init__内で呼び出している
         """
+        self.date=self._get_decoded_header("Date")# add date
         self.subject = self._get_decoded_header("Subject")
         self.to_address = self._get_decoded_header("To")
         self.cc_address = self._get_decoded_header("Cc")
@@ -82,7 +89,7 @@ class MailParser(object):
         # メッセージ本文部分の処理
         for part in self.email_message.walk():
             # ContentTypeがmultipartの場合は実際のコンテンツはさらに
-            # 中のpartにあるので読み飛ばす
+            # 中のpartにあるので読み飛ばす  タイプが宣言されているのは複数あるので
             if part.get_content_maintype() == 'multipart':
                 continue
             # ファイル名の取得
@@ -97,6 +104,28 @@ class MailParser(object):
             else:
                 # ファイル名があるならそれは添付ファイルなので
                 # データを取得する
+                '''
+                ---------------------------------------
+                ここから新しいコードを追加します。
+                --------------------------------------
+                '''
+                
+                #fname0=self._get_decoded_header(attach_fname) 
+                try:
+                #    if part.get_content_maintype()=="application":
+                #          attach_fname='test.zip'
+                    with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # M
+                    #    f.write(part.get_payload(None, True)) 
+                        if part.get_content_maintype()=="application":
+                            test1=part.get_payload()
+                            test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
+                            f.write(test1) 
+                        else:
+                            f.write(part.get_payload(decode=True))             # N
+                   #     f.write(io.BytesIO(part.get_payload(decode=True)))
+                except:
+                    print('cannot save ' + attach_fname)
+                    print(attach_fname)
                 self.attach_file_list.append({
                     "name": attach_fname,
                     "data": part.get_payload(decode=True)
@@ -123,7 +152,21 @@ class MailParser(object):
             else:
                 ret += fragment.decode("UTF-8")
         return ret
+    def get_format_date(self, date_string):
+        """
+        メールの日付をtimeに変換
+        http://www.faqs.org/rfcs/rfc2822.html
+        "Jan" / "Feb" / "Mar" / "Apr" /"May" / "Jun" / "Jul" / "Aug" /"Sep" / "Oct" / "Nov" / "Dec"
+        Wed, 12 Dec 2007 19:18:10 +0900
+        """
+        format_pattern = '%a, %d %b %Y %H:%M:%S'
 
+        #3 Jan 2012 17:58:09という形式でくるパターンもあるので、
+        #先頭が数値だったらパターンを変更
+        if date_string[0].isdigit():
+            format_pattern = '%d %b %Y %H:%M:%S'
+
+        return time.strptime(date_string[0:-6], format_pattern)
 if __name__ == "__main__":
     result = MailParser().get_attr_data()
     print(result)
