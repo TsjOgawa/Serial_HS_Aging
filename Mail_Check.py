@@ -97,10 +97,10 @@ class MailParser(object):
             # ファイル名がない場合は本文のはず
             if not attach_fname:
                 charset = str(part.get_content_charset())
-            #    if charset:
-            #        self.body += part.get_payload(decode=True).decode(charset, errors="replace")
-            #    else:
-           #         self.body += part.get_payload(decode=True)
+                if charset:
+                    self.body += part.get_payload(decode=True).decode(charset, errors="replace")
+                else:
+                    self.body += part.get_payload(decode=True)
             else:
                 # ファイル名があるならそれは添付ファイルなので
                 # データを取得する
@@ -109,20 +109,27 @@ class MailParser(object):
                 ここから新しいコードを追加します。
                 --------------------------------------
                 '''
-                
-                #fname0=self._get_decoded_header(attach_fname) 
+                if part.get_content_maintype()=="application":
+                    A1 = decode_header(attach_fname)[0][0]
+                    C1 = decode_header(attach_fname)[0][1]
+                    print("Test_title:"+A1.decode(C1))
+                    attach_fname=A1.decode(C1) 
+               
                 try:
                 #    if part.get_content_maintype()=="application":
                 #          attach_fname='test.zip'
                     with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # M
-                    #    f.write(part.get_payload(None, True)) 
+                       f.write(part.get_payload(None, True)) 
+                    '''
                         if part.get_content_maintype()=="application":
+                            print(attach_fname.decode("utf-8")) 
                             test1=part.get_payload()
                             test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
                             f.write(test1) 
                         else:
                             f.write(part.get_payload(decode=True))             # N
                    #     f.write(io.BytesIO(part.get_payload(decode=True)))
+                   '''
                 except:
                     print('cannot save ' + attach_fname)
                     print(attach_fname)
