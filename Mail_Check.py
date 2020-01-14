@@ -57,10 +57,17 @@ class MailParser(object):
                     #最初に移動してそこのフォルダから処理すれば無限ループに入らないはず
                     self.date=self._get_decoded_header("Date")# add date
                 # emlの解釈
+                #ここでファイルが既にあるかをチェックする
+                #ファイルがあれば無視して次のファイルを確認する
                     print(self.get_format_date(self.date))
-                    self._parse(self.folder)
+                    if not  os.path.isdir(self.folder):
+                        self._parse(self.folder)
+                        print(self.get_attr_data())
+                    else:
+                       continue
+                     
                     #print(self.get_format_date(self.date))
-                    print(self.get_attr_data())
+                    
         """     if ext == '.eml':
                 print('files: {}'.format(files)) """
 
@@ -152,21 +159,23 @@ class MailParser(object):
                 #  ここで新しいフォルダを作成する
                     #Flie0=os.path.join(os.getcwd(),self.NewFile)
                     #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
+                    
                     if not os.path.isdir(Flie0):
                         os.makedirs(Flie0)
                     #なんども同じ作業を繰り返すことになるが、それは後々更新
-                    with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # M
-                       f.write(part.get_payload(None, True)) 
+                    #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
+                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # M
+                            f.write(part.get_payload(None, True)) 
+                        '''
+                            if part.get_content_maintype()=="application":
+                                print(attach_fname.decode("utf-8")) 
+                                test1=part.get_payload()
+                                test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
+                                f.write(test1) 
+                            else:
+                                f.write(part.get_payload(decode=True))             # N
+                    #     f.write(io.BytesIO(part.get_payload(decode=True)))
                     '''
-                        if part.get_content_maintype()=="application":
-                            print(attach_fname.decode("utf-8")) 
-                            test1=part.get_payload()
-                            test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
-                            f.write(test1) 
-                        else:
-                            f.write(part.get_payload(decode=True))             # N
-                   #     f.write(io.BytesIO(part.get_payload(decode=True)))
-                   '''
 
 
 

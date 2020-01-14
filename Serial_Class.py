@@ -3,14 +3,18 @@ import time
 '''
 ---------------------------------------------
 Python serial(Take systems)
+[Overview]
+JPADPT29-03のシリアル通信を行う
 
 '''
 
 class Take_serial(object):
     #Communication 
-    STX=chr(0x02)#STX command
-    ETX=chr(0x03)#ETX command
-    RTX=chr(0x13)#RTX command
+    self.STX=chr(0x02)#STX command
+    self.ETX=chr(0x03)#ETX command
+    self.RTX=chr(0x13)#RTX command
+    self.com1='CL'
+    self>com2='CR'
     ONcom='ON03FFFF'
     CHset='CH000001'
     OFcom='OF03FFFF'
@@ -20,8 +24,10 @@ class Take_serial(object):
     Channel=(STX+CHset+ETX).encode('utf-8') #channel setting
     ReadCOM=(STX+'CR14B1'+ETX).encode('utf-8')#Read command setting
 #bit map image output command  PT0500##  '##' is imageNo
-    def __int__(self,name):
-        self.ser =serial.Serial('COM48',9600,timeout=1)
+    def __init__(self,name):
+        #Serial Poprtread
+        use_port=search_com_port()
+
     def Serial_Write(self,Tx_data):
         '''
         ------------------------------------
@@ -43,6 +49,21 @@ class Take_serial(object):
     def Serial_Open(self):
         self.ser.write(self.command)#ON command
         return 0
+
+    def search_com_port(self):
+    '''
+    =======================================================================
+    有効なCOMポートを自動的に探して返します
+    '''
+        coms = serial.tools.list_ports.comports()
+        comlist = []
+        for com in coms:
+            comlist.append(com.device)
+        print('Connected COM ports: ' + str(comlist))
+        use_port = comlist[0]
+        print('Use COM port: ' + use_port)
+
+        return use_port
 
 if __name__ == "__main__":
     result = Take_serial()
