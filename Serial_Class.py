@@ -14,7 +14,7 @@ class Take_serial(object):
     self.ETX=chr(0x03)#ETX command
     self.RTX=chr(0x13)#RTX command
     self.com1='CL'
-    self>com2='CR'
+    self.com2='CR'
     ONcom='ON03FFFF'
     CHset='CH000001'
     OFcom='OF03FFFF'
@@ -51,10 +51,6 @@ class Take_serial(object):
         return 0
 
     def search_com_port(self):
-    '''
-    =======================================================================
-    有効なCOMポートを自動的に探して返します
-    '''
         coms = serial.tools.list_ports.comports()
         comlist = []
         for com in coms:
