@@ -9,7 +9,7 @@ Mail解析スクリプト
 [Histry]
 2019.01.02 Ver1.0.0 TSJ ogawa
 2019.01.02 Ver1.0.1 TSJ ogawa　添付無でもＯＫなようにした.
-2020.01.20 
+2020.01.20 Ver1.0.2 TSJ ogawa
 メール本文に張り付けてあるイメージに問題発生。同じ名前で保存するので
 最後の画像のみが残ってしまう。修正が必要
 本文に貼ってある画像か、添付画像化を区別する必要がある（添付資料としての画像は、ファイル名があるので）
@@ -168,8 +168,9 @@ class MailParser(object):
                     --------------------------------------
                     '''
                     if part.get_content_maintype()=="image":
-                        if attach_fname.find("image")!=-1:
-                            A1 = part.get_all("Content-ID")
+                     #   if attach_fname.find("image")!=-1: #1　コンテンツチェックをやめる
+                        A1 = part.get_all("Content-ID")
+                        if A1!=None:
                             B1=A1[0].replace("<","")
                             attach_fname = B1.replace(">","_") + attach_fname
                         #A1 = decode_header(attach_fname)[0][0]
@@ -207,6 +208,7 @@ class MailParser(object):
                         self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
                         self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
                         self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
+                        self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
 
                         self.FileCount=self.FileCount+1
                         self.ws1['B3'].value=int(self.FileCount) 
@@ -285,7 +287,7 @@ class MailParser(object):
         if Ftype==0:
           format_pattern = '[%Y%m%d_%H%M%S]'
         else:
-            format_pattern ='%Y/%m/%d  %H:%M:%S'
+            format_pattern ='%Y/%m/%d %H:%M:%S'
         time_tuple=utils.parsedate(date_string)
         return time.strftime(format_pattern,time_tuple )
         # return datetime.strptime(date_string[0:-6],format_pattern)#date_string[0:-6]
