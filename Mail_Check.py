@@ -13,6 +13,10 @@ Mail解析スクリプト
 メール本文に張り付けてあるイメージに問題発生。同じ名前で保存するので
 最後の画像のみが残ってしまう。修正が必要
 本文に貼ってある画像か、添付画像化を区別する必要がある（添付資料としての画像は、ファイル名があるので）
+2020.09.08 Ver1.0.3 ogawa
+検索機能を簡略化。カレントフォルダ内のすべてのファイルからメールファイルを検索していたが
+カレントフォルダに置いたメールだけ検索するように変更。
+時間短縮を図る
 --------------------------------------------------
 ''' 
 #===LIblaly file===
@@ -64,71 +68,79 @@ class MailParser(object):
         #Step4|メールファイルからリストの項目となる部分を取り出す。}
         #------------------------------------------------------------------------
         print(os.getcwd())
-        for self.folder, self.subfolders, self.files in os.walk(os.getcwd()):
-            for file in os.listdir(self.folder):
-                self.base, self.ext = os.path.splitext(file)
-                if self.ext == '.eml':                   
-                    self.Bname=os.path.join(self.folder, file)
-                    with open(self.Bname, 'rb') as email_file:
-                        self.email_message = email.message_from_bytes(email_file.read())
-                    self.subject = None
-                    self.to_address = None
-                    self.cc_address = None
-                    self.from_address = None
-                    self.date=None #20191224 add date
-                    self.body = ""            
-                    #print('file:{},ext:{}'.format(file,ext))
-                    self.attach_file_list = []
-                    #最初に移動してそこのフォルダから処理すれば無限ループに入らないはず
-                    self.date=self._get_decoded_header("Date")# add date
-                # emlの解釈
-                #ここでファイルが既にあるかをチェックする
-                #ファイルがあれば無視して次のファイルを確認する
-                    print(self.get_format_date(0,self.date))
-                    print(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base))
-                    if not  os.path.isdir(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base)):
-                        self._parse(self.folder)#--
-                        print(self.get_attr_data())
-                        self.wb.save(self.filepath)
-                        print('List Seve OK')
-                    else:
-                       continue
-                     
-                    #print(self.get_format_date(self.date))
-           
-        """     if ext == '.eml':
-                print('files: {}'.format(files)) """
+        #for self.folder, self.subfolders, self.files in os.walk(os.getcwd()):
+            #既にあるフォルダ内は検索しない方向で調整する
+        for file in os.listdir(os.getcwd()):
+        #for file in os.listdir(self.folder):
+            #self.base, self.ext = os.path.splitext(self.folder)#2020/09/07
+            self.base, self.ext = os.path.splitext(file)
+            if self.ext == '.eml': 
+                self.Bname=os.path.join(os.getcwd(), file)
+                #self.Bname=os.path.join(self.folder, file)
+                with open(self.Bname, 'rb') as email_file:
+                    self.email_message = email.message_from_bytes(email_file.read())
+                self.subject = None
+                self.to_address = None
+                self.cc_address = None
+                self.from_address = None
+                self.date=None #20191224 add date
+                self.body = ""            
+                #print('file:{},ext:{}'.format(file,ext))
+                self.attach_file_list = []
+                #最初に移動してそこのフォルダから処理すれば無限ループに入らないはず
+                self.date=self._get_decoded_header("Date")# add date
+            # emlの解釈
+            #ここでファイルが既にあるかをチェックする
+            #ファイルがあれば無視して次のファイルを確認する
+                print(self.get_format_date(0,self.date))
+                print(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base))
+                if not  os.path.isdir(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base)):
+                    self._parse(os.getcwd())#--
+                    #self._parse(self.folder)#--
+                    print(self.get_attr_data())
+                    self.wb.save(self.filepath)
+                    print('List Seve OK')
+                else:
+                    continue
+                        
+                        #print(self.get_format_date(self.date))
+            
+            """     if ext == '.eml':
+                    print('files: {}'.format(files)) """
 
-        """  
-        print('folder: {}'.format(folder))
-            print('subfolders: {}'.format(subfolders))
-            print('files: {}'.format(files))
-            print() 
-        """
+            """  
+            print('folder: {}'.format(folder))
+                print('subfolders: {}'.format(subfolders))
+                print('files: {}'.format(files))
+                print() 
+            """
     def get_attr_data(self):
-        """
-        メールデータの取得
-        """
-        result = """\
-    DATE: {}
-    FROM: {}
-    TO: {}
-    CC: {}
-    -----------------------
-    BODY:
-    {}
-    -----------------------
-    ATTACH_FILE_NAME:
-    {}
-    """.format(
-            self.date,
-            self.from_address,
-            self.to_address,
-            self.cc_address,
-            self.body,
-            "_AND_".join([ x["name"] for x in self.attach_file_list])
-        )
-        return result
+        try:
+            """
+            メールデータの取得
+            """
+            result = """\
+        DATE: {}
+        FROM: {}
+        TO: {}
+        CC: {}
+        -----------------------
+        BODY:
+        {}
+        -----------------------
+        ATTACH_FILE_NAME:
+        {}
+        """.format(
+                self.date,
+                self.from_address,
+                self.to_address,
+                self.cc_address,
+                self.body,
+                "_AND_".join([ x["name"] for x in self.attach_file_list])
+            )
+            return result
+        except:
+            print('cannot saved file ')
 
 
     def _parse(self,Flie0):
@@ -212,7 +224,7 @@ class MailParser(object):
 
                         self.FileCount=self.FileCount+1
                         self.ws1['B3'].value=int(self.FileCount) 
-                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # M
+                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
                             f.write(part.get_payload(None, True)) 
                             '''
                                 if part.get_content_maintype()=="application":
@@ -225,7 +237,7 @@ class MailParser(object):
                         #     f.write(io.BytesIO(part.get_payload(decode=True)))
                         '''
                     except:
-                        print('cannot save ' + attach_fname)
+                        print('cannot save ' + str(attach_fname))
                         print(attach_fname)
                     self.attach_file_list.append({
                         "name": attach_fname,
@@ -306,4 +318,5 @@ class MailParser(object):
 
 if __name__ == "__main__":
     result = MailParser().get_attr_data()
+    #result = MailParser()
     print(result)
