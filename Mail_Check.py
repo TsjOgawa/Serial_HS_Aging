@@ -17,6 +17,7 @@ Mail解析スクリプト
 検索機能を簡略化。カレントフォルダ内のすべてのファイルからメールファイルを検索していたが
 カレントフォルダに置いたメールだけ検索するように変更。
 時間短縮を図る
+2020.09.11 Ver1.2.0  SQliteを利用してみる
 --------------------------------------------------
 ''' 
 #===LIblaly file===
@@ -34,7 +35,11 @@ import os
 import sys
 import email
 from email.header import decode_header
-
+#SQliteを追加する 2020.09.11
+#--------------------------------------------------
+import sqlite3
+from contextlib import closing
+#--------------------------------------------------
 #このコードだとフォルダにスクリプトを持っていく必要がある
 class MailParser(object):
     """
@@ -45,6 +50,7 @@ class MailParser(object):
         #Main pathを記録します
         #------------------------------------------------------------------------
         self.FileCount=0
+        self.dbname = "Userflie_Data.db"# database name
         MainPath=os.getcwd()#Mainpath
         #ステップ2｜所定フォルダ内の「Book1.xlsm」を指定して読み込む
         Mdirname = os.path.basename(MainPath)
@@ -200,42 +206,51 @@ class MailParser(object):
                     #print("Test_title:"+attach_fname)
                         #attach_fname=A1.decode(C1) 
                 
-                    try:
+                    #try:
                     #    if part.get_content_maintype()=="application":
                     #          attach_fname='test.zip'
                     #  ここで新しいフォルダを作成する
                         #Flie0=os.path.join(os.getcwd(),self.NewFile)
                         #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
                         
-                        if not os.path.isdir(Flie0):
-                            os.makedirs(Flie0)
-                        #なんども同じ作業を繰り返すことになるが、それは後々更新
-                        #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
-                        #--------------------------------------------------------------------------------------------------------
-                        self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
-                        self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
-                        self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
-                        self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
-                        self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
-                        self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
-                        self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
-                        self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
-                        self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
+                    if not os.path.isdir(Flie0):
+                        os.makedirs(Flie0)
+                    #なんども同じ作業を繰り返すことになるが、それは後々更新
+                    #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
+                    #--------------------------------------------------------------------------------------------------------
+                    self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
+                    self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
+                    self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
+                    self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
+                    self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
+                    self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
+                    self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
+                    self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
+                    self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
 
-                        self.FileCount=self.FileCount+1
-                        self.ws1['B3'].value=int(self.FileCount) 
-                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
-                            f.write(part.get_payload(None, True)) 
-                            '''
-                                if part.get_content_maintype()=="application":
-                                    print(attach_fname.decode("utf-8")) 
-                                    test1=part.get_payload()
-                                    test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
-                                    f.write(test1) 
-                                else:
-                                    f.write(part.get_payload(decode=True))             # N
-                        #     f.write(io.BytesIO(part.get_payload(decode=True)))
+                    self.FileCount=self.FileCount+1
+                    self.ws1['B3'].value=int(self.FileCount) 
+                    with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
+                        f.write(part.get_payload(None, True)) 
                         '''
+                            if part.get_content_maintype()=="application":
+                                print(attach_fname.decode("utf-8")) 
+                                test1=part.get_payload()
+                                test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
+                                f.write(test1) 
+                            else:
+                                f.write(part.get_payload(decode=True))             # N
+                    #     f.write(io.BytesIO(part.get_payload(decode=True)))
+                    '''
+                    conn=sqlite3.connect(self.dbname)
+                    c = conn.cursor()
+                    #管理番号,日付,ファイル名、ファイル種類、メール件名、保存先、送信者、送信先
+                    ogawa="INSERT INTO Rx_table VALUES ("+str(self.FileCount+1) +",'"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(Flie0)+"','"+str(self.base2)+"','"+str(self.to_address)+"')"
+                    c.execute(ogawa)
+                    #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
+                    conn.commit()
+                    conn.close()
+                    '''    
                     except:
                         print('cannot save ' + str(attach_fname))
                         print(attach_fname)
@@ -243,6 +258,7 @@ class MailParser(object):
                         "name": attach_fname,
                         "data": part.get_payload(decode=True)
                     })
+                    '''
             #ここで総合的な処理を行う メールファイルを移動
             
             try:
