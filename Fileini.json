@@ -1,4 +1,8 @@
 {
-    "SaveDB":0,
-    "ExFile":0
+    "FlleLink": {
+        "SaveDB": "N:/DBtest/Userflie_Data.db",
+        "ExFile": 0,
+        "saveFolder": "N:/USER/JDI"
+    }
+
 }
