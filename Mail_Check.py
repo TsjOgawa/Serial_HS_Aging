@@ -18,6 +18,7 @@ Mail解析スクリプト
 カレントフォルダに置いたメールだけ検索するように変更。
 時間短縮を図る
 2020.09.11 Ver1.2.0  SQliteを利用してみる
+2021,03.18 Ver1.2.1  インスタンスに引数を入れる プログラム事態は一応完成したかも
 --------------------------------------------------
 ''' 
 #===LIblaly file===
@@ -46,16 +47,23 @@ class MailParser(object):
     メールファイルのパスを受け取り、それを解析するクラス
     """
 
-    def __init__(self):
+    def __init__(self,*FileIndex):
         #Main pathを記録します
         #------------------------------------------------------------------------
+        '''
+        File index is 0)database name 1)excel name 2)Folder name
+        '''
         self.FileCount=0
-        self.dbname = "Userflie_Data.db"# database name
-        MainPath=os.getcwd()#Mainpath
+        self.dbname =FileIndex[0]
+        #self.dbname = "Userflie_Data.db"# database name
+        #self.MainPath=os.getcwd()#Mainpath
+        self.MainPath=FileIndex[2]
         #ステップ2｜所定フォルダ内の「Book1.xlsm」を指定して読み込む
-        Mdirname = os.path.basename(MainPath)
+        #Mdirname = FileIndex[2]
+        Mdirname = os.path.basename(self.MainPath)
+        #Mdirname=Mdirname+FileIndex[1]
         Mdirname=Mdirname+'_File-list.xlsx'
-        self.filepath = os.path.join(MainPath,Mdirname)
+        self.filepath = os.path.join(self.MainPath,Mdirname)
         if not os.path.isfile(self.filepath):
             New_wb = openpyxl.Workbook()
             sheet = New_wb.active
@@ -67,13 +75,13 @@ class MailParser(object):
         self.ws1 = self.wb['List']
         #self.ws0 = self.wb0['List']
         #ステップ3｜集計範囲の取得
-        self.FileCount=self.ws1['B3'].value
+        self.FileCount=1#self.ws1['B3'].value
         #self.ws1['B3'].value=str("=COUNTA(A7:A1048576)")
         #self.startdate=self.ws1['B2'].value
         #self.enddate=self.ws1['B3'].value
         #Step4|メールファイルからリストの項目となる部分を取り出す。}
         #------------------------------------------------------------------------
-        print(os.getcwd())
+        print(self.MainPath)
         #for self.folder, self.subfolders, self.files in os.walk(os.getcwd()):
             #既にあるフォルダ内は検索しない方向で調整する
         for file in os.listdir(os.getcwd()):
@@ -99,9 +107,9 @@ class MailParser(object):
             #ここでファイルが既にあるかをチェックする
             #ファイルがあれば無視して次のファイルを確認する
                 print(self.get_format_date(0,self.date))
-                print(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base))
-                if not  os.path.isdir(os.path.join(os.getcwd(),self.get_format_date(0,self.date)+'_'+self.base)):
-                    self._parse(os.getcwd())#--
+                print(os.path.join(self.MainPath,self.get_format_date(0,self.date)+'_'+self.base))
+                if not  os.path.isdir(os.path.join(self.MainPath,self.get_format_date(0,self.date)+'_'+self.base)):
+                    self._parse(self.MainPath)#--
                     #self._parse(self.folder)#--
                     print(self.get_attr_data())
                     self.wb.save(self.filepath)
@@ -156,7 +164,7 @@ class MailParser(object):
         self.cc_address = self._get_decoded_header("Cc")
         self.from_address = self._get_decoded_header("From")
         self.NewFile=(self.get_format_date(0,self.date)+'_'+self.base)
-        Flie0=os.path.join(os.getcwd(),self.NewFile)
+        Flie0=os.path.join(self.MainPath,self.NewFile)
         Attach_count=0 #2019.01.02
         if not os.path.isdir(Flie0):
             os.makedirs(Flie0)
@@ -242,6 +250,7 @@ class MailParser(object):
                                 f.write(part.get_payload(decode=True))             # N
                     #     f.write(io.BytesIO(part.get_payload(decode=True)))
                     '''
+                    '''
                     conn=sqlite3.connect(self.dbname)
                     c = conn.cursor()
                     #管理番号,日付,ファイル名、ファイル種類、メール件名、保存先、送信者、送信先
@@ -250,7 +259,8 @@ class MailParser(object):
                     #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
                     conn.commit()
                     conn.close()
-                    '''    
+                    '''  
+                    '''  
                     except:
                         print('cannot save ' + str(attach_fname))
                         print(attach_fname)
@@ -333,6 +343,6 @@ class MailParser(object):
 
 
 if __name__ == "__main__":
-    result = MailParser().get_attr_data()
+    result = MailParser("N:/小河/Userflie_Data.db","b","N:/USER/JDI").get_attr_data()
     #result = MailParser()
     print(result)
