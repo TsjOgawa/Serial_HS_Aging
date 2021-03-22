@@ -158,134 +158,139 @@ class MailParser(object):
 
 
     def _parse(self,Flie0):
-        self.date=self._get_decoded_header("Date")# add date
-        self.subject = self._get_decoded_header("Subject")
-        self.to_address = self._get_decoded_header("To")
-        self.cc_address = self._get_decoded_header("Cc")
-        self.from_address = self._get_decoded_header("From")
-        self.NewFile=(self.get_format_date(0,self.date)+'_'+self.base)
-        Flie0=os.path.join(self.MainPath,self.NewFile)
-        Attach_count=0 #2019.01.02
-        if not os.path.isdir(Flie0):
-            os.makedirs(Flie0)
-        # メッセージ本文部分の処理
-            for part in self.email_message.walk():
-                # ContentTypeがmultipartの場合は実際のコンテンツはさらに
-                # 中のpartにあるので読み飛ばす  タイプが宣言されているのは複数あるので
-                if part.get_content_maintype() == 'multipart':
-                    continue
-                # ファイル名の取得
-                attach_fname = part.get_filename()
-                # ファイル名がない場合は本文のはず
-                if not attach_fname:
-                    if part.get_content_maintype() == 'text':  
-                        charset = str(part.get_content_charset())
-                        if charset:
-                            self.body += part.get_payload(decode=True).decode(charset, errors="replace")
-                        else:
-                            self.body += part.get_payload(decode=True)
-                else:
-                    # ファイル名があるならそれは添付ファイルなので
-                    # データを取得する
-                    '''
-                    ---------------------------------------
-                    ここから新しいコードを追加します。
-                    [Function]
-                    --------------------------------------
-                    '''
-                    if part.get_content_maintype()=="image":
-                     #   if attach_fname.find("image")!=-1: #1　コンテンツチェックをやめる
-                        A1 = part.get_all("Content-ID")
-                        if A1!=None:
-                            B1=A1[0].replace("<","")
-                            attach_fname = B1.replace(">","_") + attach_fname
-                        #A1 = decode_header(attach_fname)[0][0]
-                    elif part.get_content_maintype()=="application":
-                        A1 = decode_header(attach_fname)[0][0]
-                        C1 = decode_header(attach_fname)[0][1]
-                        attach_fname=A1
-                        if not C1:
+    #    try:
+            self.date=self._get_decoded_header("Date")# add date
+            self.subject = self._get_decoded_header("Subject")
+            self.to_address = self._get_decoded_header("To")
+            self.cc_address = self._get_decoded_header("Cc")
+            self.from_address = self._get_decoded_header("From")
+            self.NewFile=(self.get_format_date(0,self.date)+'_'+self.base)
+            Flie0=os.path.join(self.MainPath,self.NewFile)
+            Attach_count=0 #2019.01.02
+            if not os.path.isdir(Flie0):
+                os.makedirs(Flie0)
+            # メッセージ本文部分の処理
+                for part in self.email_message.walk():
+                    # ContentTypeがmultipartの場合は実際のコンテンツはさらに
+                    # 中のpartにあるので読み飛ばす  タイプが宣言されているのは複数あるので
+                    if part.get_content_maintype() == 'multipart':
+                        continue
+                    # ファイル名の取得
+                    attach_fname = part.get_filename()
+                    # ファイル名がない場合は本文のはず
+                    if not attach_fname:
+                        if part.get_content_maintype() == 'text':  
+                            charset = str(part.get_content_charset())
+                            if charset:
+                                self.body += part.get_payload(decode=True).decode(charset, errors="replace")
+                            else:
+                                self.body += part.get_payload(decode=True)
+                    else:
+                        # ファイル名があるならそれは添付ファイルなので
+                        # データを取得する
+                        '''
+                        ---------------------------------------
+                        ここから新しいコードを追加します。
+                        [Function]
+                        --------------------------------------
+                        '''
+                        if part.get_content_maintype()=="image":
+                        #   if attach_fname.find("image")!=-1: #1　コンテンツチェックをやめる
+                            A1 = part.get_all("Content-ID")
+                            if A1!=None:
+                                B1=A1[0].replace("<","")
+                                attach_fname = B1.replace(">","_") + attach_fname
+                            #A1 = decode_header(attach_fname)[0][0]
+                        elif part.get_content_maintype()=="application":
+                            A1 = decode_header(attach_fname)[0][0]
+                            C1 = decode_header(attach_fname)[0][1]
                             attach_fname=A1
-                        else:
-                            attach_fname=A1.decode(C1) 
-                    self.base1, self.ext1=os.path.splitext(attach_fname)
-                    self.base2, self.ext2=self.from_address.split('<')
-                    Attach_count=Attach_count+1        
-                    #print("Test_title:"+attach_fname)
-                        #attach_fname=A1.decode(C1) 
-                
-                    #try:
-                    #    if part.get_content_maintype()=="application":
-                    #          attach_fname='test.zip'
-                    #  ここで新しいフォルダを作成する
-                        #Flie0=os.path.join(os.getcwd(),self.NewFile)
-                        #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
+                            if not C1:
+                                attach_fname=A1
+                            else:
+                                attach_fname=A1.decode(C1) 
+                        self.base1, self.ext1=os.path.splitext(attach_fname)
+                        self.base2, self.ext2=self.from_address.split('<')
+                        Attach_count=Attach_count+1        
+                        #print("Test_title:"+attach_fname)
+                            #attach_fname=A1.decode(C1) 
+                    
+                        #try:
+                        #    if part.get_content_maintype()=="application":
+                        #          attach_fname='test.zip'
+                        #  ここで新しいフォルダを作成する
+                            #Flie0=os.path.join(os.getcwd(),self.NewFile)
+                            #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
+                            
+                        if not os.path.isdir(Flie0):
+                            os.makedirs(Flie0)
+                        #なんども同じ作業を繰り返すことになるが、それは後々更新
+                        #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
+                        #--------------------------------------------------------------------------------------------------------
+                        self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
+                        self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
+                        self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
+                        self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
+                        self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
+                        self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
+                        self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
+                        self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
+                        self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
+
+                        self.FileCount=self.FileCount+1
+                        self.ws1['B3'].value=int(self.FileCount) 
+                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
+                            f.write(part.get_payload(None, True)) 
+                            '''
+                                if part.get_content_maintype()=="application":
+                                    print(attach_fname.decode("utf-8")) 
+                                    test1=part.get_payload()
+                                    test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
+                                    f.write(test1) 
+                                else:
+                                    f.write(part.get_payload(decode=True))             # N
+                        #     f.write(io.BytesIO(part.get_payload(decode=True)))
+                        '''
+                        try:
+                            conn=sqlite3.connect(self.dbname)
+                            c = conn.cursor()
+                            #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
+                            ogawa="INSERT INTO Rx_table VALUES ("+str(self.FileCount+1) +",'"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(Flie0)+"','"+str(self.base2)+"','"+str(self.to_address)+"','"+ self.get_format_date(1,self.date)+"')"
+                            c.execute(ogawa)
+                            #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
+                        except:
+                              print('DBに保存できませんでした')  
+                        finally:
+                            conn.commit()
+                            conn.close()
                         
+                        '''  
+                        except:
+                            print('cannot save ' + str(attach_fname))
+                            print(attach_fname)
+                        self.attach_file_list.append({
+                            "name": attach_fname,
+                            "data": part.get_payload(decode=True)
+                        })
+                        '''
+                #ここで総合的な処理を行う メールファイルを移動
+                
+                try:
                     if not os.path.isdir(Flie0):
                         os.makedirs(Flie0)
-                    #なんども同じ作業を繰り返すことになるが、それは後々更新
-                    #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
-                    #--------------------------------------------------------------------------------------------------------
-                    self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
-                    self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
-                    self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
-                    self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
-                    self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
-                    self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
-                    self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
-                    self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
-                    self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
+                    #本文をテキストで保存する
+                    with open(os.path.join(Flie0, 'メール本文.txt'), 'wb' ) as T:  # M
+                        T.write(self.body.encode('utf-8'))
 
-                    self.FileCount=self.FileCount+1
-                    self.ws1['B3'].value=int(self.FileCount) 
-                    with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
-                        f.write(part.get_payload(None, True)) 
-                        '''
-                            if part.get_content_maintype()=="application":
-                                print(attach_fname.decode("utf-8")) 
-                                test1=part.get_payload()
-                                test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
-                                f.write(test1) 
-                            else:
-                                f.write(part.get_payload(decode=True))             # N
-                    #     f.write(io.BytesIO(part.get_payload(decode=True)))
-                    '''
-                    '''
-                    conn=sqlite3.connect(self.dbname)
-                    c = conn.cursor()
-                    #管理番号,日付,ファイル名、ファイル種類、メール件名、保存先、送信者、送信先
-                    ogawa="INSERT INTO Rx_table VALUES ("+str(self.FileCount+1) +",'"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(Flie0)+"','"+str(self.base2)+"','"+str(self.to_address)+"')"
-                    c.execute(ogawa)
-                    #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
-                    conn.commit()
-                    conn.close()
-                    '''  
-                    '''  
-                    except:
-                        print('cannot save ' + str(attach_fname))
-                        print(attach_fname)
-                    self.attach_file_list.append({
-                        "name": attach_fname,
-                        "data": part.get_payload(decode=True)
-                    })
-                    '''
-            #ここで総合的な処理を行う メールファイルを移動
-            
-            try:
-                if not os.path.isdir(Flie0):
-                    os.makedirs(Flie0)
-                #本文をテキストで保存する
-                with open(os.path.join(Flie0, 'メール本文.txt'), 'wb' ) as T:  # M
-                    T.write(self.body.encode('utf-8'))
+                    with open(os.path.join(Flie0, 'メールCC.txt'), 'wb' ) as T:  # M
+                        T.write(self.cc_address.encode('utf-8'))
 
-                with open(os.path.join(Flie0, 'メールCC.txt'), 'wb' ) as T:  # M
-                    T.write(self.cc_address.encode('utf-8'))
-
-                if os.path.isdir(Flie0):
-                    shutil.move(self.Bname,Flie0)
-            except:
-                print('既にメールファイルは移動しています')
-
+                    if os.path.isdir(Flie0):
+                        shutil.move(self.Bname,Flie0)
+                except:
+                    print('既にメールファイルは移動しています')
+#        except:
+#            print('既にメールファイルは移動しています')
     def _get_decoded_header(self, key_name):
         """
         ヘッダーオブジェクトからデコード済の結果を取得する
@@ -343,6 +348,6 @@ class MailParser(object):
 
 
 if __name__ == "__main__":
-    result = MailParser("N:/小河/Userflie_Data.db","b","N:/USER/JDI").get_attr_data()
+    result = MailParser("N:/小河/Userflie_Data.db","b","D:/USER/JDI").get_attr_data()
     #result = MailParser()
     print(result)
