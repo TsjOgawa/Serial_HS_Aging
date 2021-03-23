@@ -42,7 +42,7 @@ import sqlite3
 from contextlib import closing
 #--------------------------------------------------
 #このコードだとフォルダにスクリプトを持っていく必要がある
-class MailParser(object):
+class MailParser():
     """
     メールファイルのパスを受け取り、それを解析するクラス
     """
@@ -79,9 +79,9 @@ class MailParser(object):
         self.ws1 = self.wb['List']
         #self.ws0 = self.wb0['List']
         #ステップ3｜集計範囲の取得
-        if self.ws1['B3'].value=="":
+        if self.ws1['B3'].value is None:
             self.FileCount=1#self.ws1['B3'].value
-        else
+        else:
             self.FileCount=self.ws1['B3'].value
         #self.ws1['B3'].value=str("=COUNTA(A7:A1048576)")
         #self.startdate=self.ws1['B2'].value
@@ -89,6 +89,7 @@ class MailParser(object):
         #Step4|メールファイルからリストの項目となる部分を取り出す。}
         #------------------------------------------------------------------------
         print(self.MainPath)
+    def app(self):
         #for self.folder, self.subfolders, self.files in os.walk(os.getcwd()):
             #既にあるフォルダ内は検索しない方向で調整する
         for file in os.listdir(os.getcwd()):
@@ -261,21 +262,21 @@ class MailParser(object):
                                     f.write(part.get_payload(decode=True))             # N
                         #     f.write(io.BytesIO(part.get_payload(decode=True)))
                         '''
-                        #try:
-                        conn=sqlite3.connect(self.dbname)
-                        c = conn.cursor()
-                        #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
-                        if self.RXORTX=="受信":
-                            ogawa="INSERT INTO Rx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,受信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
-                        elif self.RXORTX=="送信":
-                            ogawa="INSERT INTO Tx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,送信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test).encode("utf-8")+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
-                        c.execute(ogawa)
-                            #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
-                        #except:
-                        print('DBに保存できませんでした')  
-                        #finally:
-                        conn.commit()
-                        conn.close()
+                        try:
+                            conn=sqlite3.connect(self.dbname)
+                            c = conn.cursor()
+                            #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
+                            if self.RXORTX.find("受信")>-1:
+                                ogawa="INSERT INTO Rx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,受信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str(self.ModelName)+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                            elif self.RXORTX.find("送信")>-1:
+                                ogawa="INSERT INTO Tx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,送信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str(self.ModelName)+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                            c.execute(ogawa)
+                                #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
+                        except:
+                            print('DBに保存できませんでした')  
+                        finally:
+                            conn.commit()
+                            conn.close()
                         
                         '''  
                         except:
@@ -361,6 +362,8 @@ class MailParser(object):
 
 
 if __name__ == "__main__":
-    result = MailParser("N:/小河/Userflie_Data.db","D:/USER/JDI","D:/USER/JDI","F21","受信").get_attr_data()
+    result = MailParser("N:/小河/Userflie_Data.db","D:/USER/JDI","D:/USER/JDI","F21","受信")
+    result.app()
+    result.get_attr_data()
     #result = MailParser()
     print(result)
