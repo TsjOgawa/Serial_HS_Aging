@@ -79,7 +79,10 @@ class MailParser(object):
         self.ws1 = self.wb['List']
         #self.ws0 = self.wb0['List']
         #ステップ3｜集計範囲の取得
-        self.FileCount=1#self.ws1['B3'].value
+        if self.ws1['B3'].value=="":
+            self.FileCount=1#self.ws1['B3'].value
+        else
+            self.FileCount=self.ws1['B3'].value
         #self.ws1['B3'].value=str("=COUNTA(A7:A1048576)")
         #self.startdate=self.ws1['B2'].value
         #self.enddate=self.ws1['B3'].value
@@ -231,6 +234,8 @@ class MailParser(object):
                             os.makedirs(Flie0)
                         #なんども同じ作業を繰り返すことになるが、それは後々更新
                         #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
+                        test=str(self.to_address)
+                        test=test.replace(chr(0x27),'_')
                         #--------------------------------------------------------------------------------------------------------
                         self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
                         self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
@@ -238,7 +243,7 @@ class MailParser(object):
                         self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
                         self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
                         self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
-                        self.ws1.cell(row=7+self.FileCount, column=7).value = self.to_address    #To(送信先)
+                        self.ws1.cell(row=7+self.FileCount, column=7).value = test          #To(送信先)
                         self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
                         self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
 
@@ -261,9 +266,9 @@ class MailParser(object):
                         c = conn.cursor()
                         #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
                         if self.RXORTX=="受信":
-                            ogawa="INSERT INTO Rx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,受信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(self.to_address)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                            ogawa="INSERT INTO Rx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,受信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
                         elif self.RXORTX=="送信":
-                            ogawa="INSERT INTO Tx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,送信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(self.to_address).encode("utf-8")+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                            ogawa="INSERT INTO Tx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,送信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(test).encode("utf-8")+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
                         c.execute(ogawa)
                             #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
                         #except:
