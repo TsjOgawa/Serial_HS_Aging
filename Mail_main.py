@@ -18,6 +18,7 @@ import glob
 class Main_form(object):
     def __init__(self):
         self.dFile=""
+        self.conn_2=""
         self.Mlist=[]
         self.list_A=["受信用","送信用"]
         self.list_B=[]
@@ -27,25 +28,26 @@ class Main_form(object):
                 
                 dFile = json.load(f)
                 dFile=dFile['FlleLink']
-                conn = sqlite3.connect(dFile["SaveDB"])
-                cur = conn.cursor()
-                cur.execute("SELECT 機種名 FROM Model_table")
-                for row in (cur):
+                conn_1 = sqlite3.connect(dFile["SaveDB"])
+                self.conn_2 = dFile["saveFolder"]
+                cur_1 = conn_1.cursor()
+                cur_1.execute("SELECT 機種名 FROM Model_table")
+                for row in (cur_1):
                     self.Mlist.append(str(row[0]))
-                cur.close()
-                conn.close()
+                cur_1.close()
+                conn_1.close()
         
     def ask_folder(self):
         """　
         フォルダ指定
         """
-        path = filedialog.askdirectory()
-        folder_path.set(path)
-        input_dir = folder_path.get()
-        if not os.path.isdir(os.path.join(path,self.Mlist[0])):
+        #path = filedialog.askdirectory()
+        #folder_path.set(path)
+        #input_dir = folder_path.get()
+        if not os.path.isdir(os.path.join(self.conn_2,self.Mlist[0])):
             for a in self.Mlist:
-                os.makedirs(os.path.join(path,a))
-                self.list_B.append(os.path.join(path,a))
+                os.makedirs(os.path.join(self.conn_2,a))
+                self.list_B.append(os.path.join(self.conn_2,a))
         if not os.path.isdir(os.path.join(self.list_B[0],self.list_A[0])):
             #os.path.join(path,list_B[0])
             #for b in self.list_B:
