@@ -80,7 +80,7 @@ class MailParser():
         #self.ws0 = self.wb0['List']
         #ステップ3｜集計範囲の取得
         if self.ws1['B3'].value is None:
-            self.FileCount=1#self.ws1['B3'].value
+            self.FileCount=0#self.ws1['B3'].value
         else:
             self.FileCount=self.ws1['B3'].value
         #self.ws1['B3'].value=str("=COUNTA(A7:A1048576)")
@@ -167,7 +167,7 @@ class MailParser():
 
 
     def _parse(self,Flie0):
-    #    try:
+        try:
             self.date=self._get_decoded_header("Date")# add date
             self.subject = self._get_decoded_header("Subject")
             self.to_address = self._get_decoded_header("To")
@@ -224,44 +224,47 @@ class MailParser():
                         #print("Test_title:"+attach_fname)
                             #attach_fname=A1.decode(C1) 
                     
-                        #try:
-                        #    if part.get_content_maintype()=="application":
-                        #          attach_fname='test.zip'
-                        #  ここで新しいフォルダを作成する
-                            #Flie0=os.path.join(os.getcwd(),self.NewFile)
-                            #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
-                            
-                        if not os.path.isdir(Flie0):
-                            os.makedirs(Flie0)
-                        #なんども同じ作業を繰り返すことになるが、それは後々更新
-                        #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
-                        test=str(self.to_address)
-                        test=test.replace(chr(0x27),'_')
-                        #--------------------------------------------------------------------------------------------------------
-                        self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
-                        self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
-                        self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
-                        self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
-                        self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
-                        self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
-                        self.ws1.cell(row=7+self.FileCount, column=7).value = test          #To(送信先)
-                        self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
-                        self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
+                        try:
+                            #    if part.get_content_maintype()=="application":
+                            #          attach_fname='test.zip'
+                            #  ここで新しいフォルダを作成する
+                                #Flie0=os.path.join(os.getcwd(),self.NewFile)
+                                #ファイルがすでに存在するかを確認する=>存在しても中身がない場合があるのでVer1.0.0ではそのまま作業を行う
+                                
+                            if not os.path.isdir(Flie0):
+                                os.makedirs(Flie0)
+                            #なんども同じ作業を繰り返すことになるが、それは後々更新
+                            #既に存在するファイルは繰り返さない（時間がかかるのと差分更新にしたいので）2020.01.09
+                            test=str(self.to_address)
+                            test=test.replace(chr(0x27),'_')
+                            #--------------------------------------------------------------------------------------------------------
+                            self.ws1.cell(row=7+self.FileCount, column=1).value = self.FileCount+1   #List counter
+                            self.ws1.cell(row=7+self.FileCount, column=2).value = str(attach_fname)  #attach count(添付ファイル名)
+                            self.ws1.cell(row=7+self.FileCount, column=3).value = str(self.ext1)     #  ファイル種類
+                            self.ws1.cell(row=7+self.FileCount, column=4).value = self.subject       #Subject(件名)
+                            self.ws1.cell(row=7+self.FileCount, column=5).value = str(Flie0)         #File name  
+                            self.ws1.cell(row=7+self.FileCount, column=6).value = self.base2         #From(送信者)
+                            self.ws1.cell(row=7+self.FileCount, column=7).value = test          #To(送信先)
+                            self.ws1.cell(row=7+self.FileCount, column=8).value = self.get_format_date(1,self.date)#self.get_format_date(self.date)         #data(送受信日付)
+                            self.ws1.cell(row=7+self.FileCount, column=8).number_format="yyyy/m/d h:mm"
+                            self.ws1.cell(row=7+self.FileCount, column=9).value = self.ModelName
+                            self.FileCount=self.FileCount+1
+                            self.ws1['B3'].value=int(self.FileCount) 
+                            with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
+                                f.write(part.get_payload(None, True)) 
+                                '''
+                                    if part.get_content_maintype()=="application":
+                                        print(attach_fname.decode("utf-8")) 
+                                        test1=part.get_payload()
+                                        test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
+                                        f.write(test1) 
+                                    else:
+                                        f.write(part.get_payload(decode=True))             # N
+                            　　#     f.write(io.BytesIO(part.get_payload(decode=True)))
+                            　　'''
+                        except:
+                            print('エクセルファイルひらいていないですか？')
 
-                        self.FileCount=self.FileCount+1
-                        self.ws1['B3'].value=int(self.FileCount) 
-                        with open(os.path.join(Flie0, attach_fname), 'wb' ) as f:  # 20200908
-                            f.write(part.get_payload(None, True)) 
-                            '''
-                                if part.get_content_maintype()=="application":
-                                    print(attach_fname.decode("utf-8")) 
-                                    test1=part.get_payload()
-                                    test1=base64.urlsafe_b64decode(test1.encode('ASCII')).decode("utf-8")
-                                    f.write(test1) 
-                                else:
-                                    f.write(part.get_payload(decode=True))             # N
-                        #     f.write(io.BytesIO(part.get_payload(decode=True)))
-                        '''
                         try:
                             conn=sqlite3.connect(self.dbname)
                             c = conn.cursor()
@@ -303,8 +306,8 @@ class MailParser():
                         shutil.move(self.Bname,Flie0)
                 except:
                     print('既にメールファイルは移動しています')
-#        except:
-#            print('既にメールファイルは移動しています')
+        except:
+            print('既にメールファイルは移動しています')
     def _get_decoded_header(self, key_name):
         """
         ヘッダーオブジェクトからデコード済の結果を取得する
