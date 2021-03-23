@@ -51,19 +51,23 @@ class MailParser(object):
         #Main pathを記録します
         #------------------------------------------------------------------------
         '''
-        File index is 0)database name 1)excel name 2)Folder name
+        File index is 0)database name 1)excel name 2)Folder name 3)Model name 4）Rx or Tx
         '''
         self.FileCount=0
         self.dbname =FileIndex[0]
+        self.EXpath =FileIndex[1]
         #self.dbname = "Userflie_Data.db"# database name
         #self.MainPath=os.getcwd()#Mainpath
         self.MainPath=FileIndex[2]
+        self.ModelName=FileIndex[3]
+        self.RXORTX=FileIndex[4]
         #ステップ2｜所定フォルダ内の「Book1.xlsm」を指定して読み込む
         #Mdirname = FileIndex[2]
         Mdirname = os.path.basename(self.MainPath)
         #Mdirname=Mdirname+FileIndex[1]
         Mdirname=Mdirname+'_File-list.xlsx'
-        self.filepath = os.path.join(self.MainPath,Mdirname)
+        self.filepath = os.path.join(self.EXpath,Mdirname)
+        #self.filepath = os.path.join(self.MainPath,Mdirname)
         if not os.path.isfile(self.filepath):
             New_wb = openpyxl.Workbook()
             sheet = New_wb.active
@@ -128,6 +132,7 @@ class MailParser(object):
                 print('files: {}'.format(files))
                 print() 
             """
+    
     def get_attr_data(self):
         try:
             """
@@ -251,18 +256,21 @@ class MailParser(object):
                                     f.write(part.get_payload(decode=True))             # N
                         #     f.write(io.BytesIO(part.get_payload(decode=True)))
                         '''
-                        try:
-                            conn=sqlite3.connect(self.dbname)
-                            c = conn.cursor()
-                            #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
-                            ogawa="INSERT INTO Rx_table VALUES ("+str(self.FileCount+1) +",'"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(Flie0)+"','"+str(self.base2)+"','"+str(self.to_address)+"','"+ self.get_format_date(1,self.date)+"')"
-                            c.execute(ogawa)
+                        #try:
+                        conn=sqlite3.connect(self.dbname)
+                        c = conn.cursor()
+                        #管理番号,登録日,機種名,ファイル名、ファイル種類、メール件名、受信者、宛先、ファイル保存先、受信日時
+                        if self.RXORTX=="受信":
+                            ogawa="INSERT INTO Rx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,受信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(self.to_address)+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                        elif self.RXORTX=="送信":
+                            ogawa="INSERT INTO Tx_table(登録日,機種名,ファイル名,ファイル種類,メール件名,送信者,宛先,ファイル保存先) VALUES ('"+str(self.get_format_date(1,self.date))+"','"+str("F21")+"','"+str(attach_fname)+"','"+str(self.ext1)+"','"+str(self.subject)+"','"+str(self.to_address).encode("utf-8")+"','"+str(self.base2)+"','"+str(Flie0)+ "')"
+                        c.execute(ogawa)
                             #c.execute("INSERT INTO Rx_table VALUES (1,'今朝のおかず','魚を食べました','2020-02-01 00:00:00','','','','','')")
-                        except:
-                              print('DBに保存できませんでした')  
-                        finally:
-                            conn.commit()
-                            conn.close()
+                        #except:
+                        print('DBに保存できませんでした')  
+                        #finally:
+                        conn.commit()
+                        conn.close()
                         
                         '''  
                         except:
@@ -348,6 +356,6 @@ class MailParser(object):
 
 
 if __name__ == "__main__":
-    result = MailParser("N:/小河/Userflie_Data.db","b","D:/USER/JDI").get_attr_data()
+    result = MailParser("N:/小河/Userflie_Data.db","D:/USER/JDI","D:/USER/JDI","F21","受信").get_attr_data()
     #result = MailParser()
     print(result)

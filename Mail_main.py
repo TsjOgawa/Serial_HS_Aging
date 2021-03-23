@@ -5,16 +5,19 @@ import sqlite3
 import os
 from tkinter import ttk
 class Main_form(object):
+
     def __init__(self):
         self.dFile=""
         self.Mlist=[]
         #try:
         if os.path.isfile('Fileini.json'):
-            with open('Fileini.json') as f:
+            with open('Fileini.json',"r",encoding="utf-8") as f:
                 
-                dFile = json.load(f)
+                dFile = json.load(f,encoding="utf-8")
                 dFile=dFile['FlleLink']
-                conn = sqlite3.connect(dFile["SaveDB"])
+                Dfilename=dFile["SaveDB"]
+
+                conn = sqlite3.connect(Dfilename)
                 cur = conn.cursor()
                 cur.execute("SELECT 機種名 FROM Model_table")
                 for row in (cur):
