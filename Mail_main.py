@@ -41,19 +41,20 @@ class Main_form(object):
                 cur_1.close()
                 conn_1.close()
 
-    def start(self):
-        global stop_flag
-        global thread
-
-        # スレッドが無いなら生成してstart()する
-        #if not thread:
-        thread = threading.Thread(target=self.delete,name="Thread_1")
-        thread.setDaemon(True)
-        stop_flag=False
-        thread.start()      
-
-
-            
+    def ass(self):
+        Run_but_1.configure(state = "disabled")
+        Run_but_2.configure(state = "disabled")
+        Model_List.configure(state = "disabled")
+        mail_List.configure(state = "disabled")
+        pb2.start(100)
+        result = Mail_Check.MailParser(self.dFile,self.conn_2,self.list_C,Model_List.get(),mail_List.get())
+        result.app()
+        messagebox.showinfo('終了！', 'メールファイル完成致しました。')
+        Run_but_1.configure(state = "normal")
+        Run_but_2.configure(state = "normal")
+        Model_List.configure(state = "normal")
+        mail_List.configure(state = "normal")
+        pb2.stop()    
     def ask_folder(self):
         """　
         フォルダ指定
@@ -61,11 +62,7 @@ class Main_form(object):
         #path = filedialog.askdirectory()
         #folder_path.set(path)
         #input_dir = folder_path.get()
-        Run_but_1.configure(state = "disabled")
-        Run_but_2.configure(state = "disabled")
-        Model_List.configure(state = "disabled")
-        mail_List.configure(state = "disabled")
-        pb2.start(100)
+
         self.list_B=(os.path.join(self.conn_2,Model_List.get()))
         
         if not os.path.isdir(self.list_B):
@@ -89,19 +86,14 @@ class Main_form(object):
         #Mailcheck
         print(mail_List.get())
         print(Model_List.get())
-        result = Mail_Check.MailParser(self.dFile,self.conn_2,self.list_C,Model_List.get(),mail_List.get())
-        thread = threading.Thread(target=result.app())
+   
+        thread = threading.Thread(target=self.ass)
         thread.setDaemon(True)
         thread.start()
-        thread.join()
-        messagebox.showinfo('終了！', 'メールファイル完成致しました。')
 
-        Run_but_1.configure(state = "normal")
-        Run_but_2.configure(state = "normal")
-        Model_List.configure(state = "normal")
-        mail_List.configure(state = "normal")
-        pb2.stop()
-    
+        #thread.join()
+
+        
     def delete(self):
         main_win.destroy()
 
