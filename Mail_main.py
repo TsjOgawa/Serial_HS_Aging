@@ -62,7 +62,6 @@ class Main_form(object):
         #path = filedialog.askdirectory()
         #folder_path.set(path)
         #input_dir = folder_path.get()
-
         self.list_B=(os.path.join(self.conn_2,Model_List.get()))
         
         if not os.path.isdir(self.list_B):
@@ -86,7 +85,8 @@ class Main_form(object):
         #Mailcheck
         print(mail_List.get())
         print(Model_List.get())
-
+          
+        thread = threading.Thread(target=self.ass)
         thread.setDaemon(True)
         thread.start()
 
