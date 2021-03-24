@@ -1,8 +1,8 @@
 {
     "FlleLink": {
-        "SaveDB": "C:/Users/TSJ_智基/Desktop/DBtest/Userflie_Data.db",
-        "ExFile": 0,
-        "saveFolder": "C:/Users/TSJ_智基/Desktop/JDI"
+        "SaveDB": "N:/DB/Userflie_Data.db",
+        "ExFile": "N:/USER/JDI",
+        "saveFolder": "N:/USER/JDI"
     }
 
 }
