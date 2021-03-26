@@ -365,7 +365,7 @@ class MailParser():
 
 
 if __name__ == "__main__":
-    result = MailParser("N:/小河/Userflie_Data.db","D:/USER/JDI","D:/USER/JDI","F21","受信")
+    result = MailParser("D:/DB/Userflie_Data.db","D:/USER/JDI","D:/USER/JDI","F21","受信")
     result.app()
     result.get_attr_data()
     #result = MailParser()
