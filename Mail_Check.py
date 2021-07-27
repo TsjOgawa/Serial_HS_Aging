@@ -155,6 +155,7 @@ class MailParser():
         {}
         """.format(
                 self.date,
+                
                 self.from_address,
                 self.to_address,
                 self.cc_address,
@@ -167,7 +168,7 @@ class MailParser():
 
 
     def _parse(self,Flie0):
-        try:
+        #try:
             self.date=self._get_decoded_header("Date")# add date
             self.subject = self._get_decoded_header("Subject")
             self.to_address = self._get_decoded_header("To")
@@ -306,8 +307,8 @@ class MailParser():
                         shutil.move(self.Bname,Flie0)
                 except:
                     print('既にメールファイルは移動しています')
-        except:
-            print('既にメールファイルは移動しています')
+        #except:
+        #    print('既にメールファイルは移動しています')
     def _get_decoded_header(self, key_name):
         """
         ヘッダーオブジェクトからデコード済の結果を取得する
